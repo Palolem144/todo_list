@@ -11,11 +11,11 @@ import (
 func main() {
 
 	models.InitDB()
-	http.HandleFunc("/create", handler.Create)
+	http.HandleFunc("/create/", handler.Create)
 	http.HandleFunc("/getAll", handler.GetAll)
-	http.HandleFunc("/get", handler.Get)
-	http.HandleFunc("/update", handler.Update)
-	http.HandleFunc("/delete", handler.Delete)
+	http.HandleFunc("/get/", handler.Get)
+	http.HandleFunc("/update/", handler.Update)
+	http.HandleFunc("/delete/", handler.Delete)
 
 	log.Println("Starting server...")
 	err := http.ListenAndServe(":3000", nil)

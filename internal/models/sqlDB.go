@@ -7,18 +7,17 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var MainDB *sql.DB
+var DB *sql.DB
 
-// const FileName = "todo.db"
+const FileName = "/Users/pllm/go/src/github.com/Palolem144/todo_list/todo.db"
 
 func InitDB() {
-	// db_file = ".todo_list/todo.db"
 	db, err := sql.Open("sqlite3", FileName)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// defer db.Close()
 	log.Println("Connected to the database")
-	MainDB = db
+	DB = db
 
 }

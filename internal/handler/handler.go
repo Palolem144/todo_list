@@ -17,10 +17,11 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	rows, err := models.MainDB.Query("SELECT * FROM tasks")
+	rows, err := models.DB.Query("SELECT * FROM tasks")
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer rows.Close()
 	var tasks Tasks
 	for rows.Next() {
 		var task domain.Task
@@ -44,13 +45,12 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	id := r.URL.Query().Get(":id")
-	stmt, err := models.MainDB.Prepare("SELECT * FROM tasks where id = ?")
+	id := r.URL.Query().Get("id")
+	stmt, err := models.DB.Prepare(" SELECT * FROM tasks where id = ?")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
-	// defer stmt.Close()
 	rows, errQuery := stmt.Query(id)
 	if errQuery != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -65,7 +65,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		if errMarshal != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(respBody)
 	}
@@ -79,7 +79,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	var task domain.Task
 	task.Name = name
-	stmt, err := models.MainDB.Prepare("INSERT INTO tasks(name) values (?)")
+	stmt, err := models.DB.Prepare("INSERT INTO tasks(name) values (?)")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
@@ -107,17 +107,16 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	name := r.FormValue("name")
-	id := r.URL.Query().Get(":id")
+	id := r.URL.Query().Get("id")
 	var task domain.Task
 	ID, _ := strconv.ParseInt(id, 10, 0)
 	task.Id = ID
 	task.Name = name
-	stmt, err := models.MainDB.Prepare("UPDATE  tasks SET name = ? WHERE id = ?")
+	stmt, err := models.DB.Prepare("UPDATE  tasks SET name = ? WHERE id = ?")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
-	// defer stmt.Close()
 	result, errExec := stmt.Exec(task.Name, task.Id)
 	if errExec != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -142,13 +141,12 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
-	id := r.URL.Query().Get(":id")
-	stmt, err := models.MainDB.Prepare("DELETE FROM tasks where id = ?")
+	id := r.URL.Query().Get("id")
+	stmt, err := models.DB.Prepare("DELETE FROM tasks where id = ?")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
-	// defer stmt.Close()
 	result, errExec := stmt.Exec(id)
 	if errExec != nil {
 		w.WriteHeader(http.StatusNotFound)
