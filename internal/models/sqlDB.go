@@ -19,5 +19,4 @@ func InitDB() {
 	// defer db.Close()
 	log.Println("Connected to the database")
 	DB = db
-
 }

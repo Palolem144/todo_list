@@ -93,9 +93,11 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	task.Id = newID
 	resBody, errMarshal := json.Marshal(task)
+
 	if errMarshal != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+	err = json.NewDecoder(r.Body).Decode(task.Name)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(resBody)
