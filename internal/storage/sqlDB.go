@@ -16,7 +16,6 @@ func InitDB() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// defer db.Close()
 	log.Println("Connected to the database")
 	DB = db
 }
