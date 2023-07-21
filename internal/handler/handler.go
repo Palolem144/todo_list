@@ -17,7 +17,7 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	rows, err := storage.DB.Query("SELECT * FROM tasks")
+	rows, err := storage.DB.Query("SELECT id, name FROM tasks")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -97,7 +97,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	err = json.NewDecoder(r.Body).Decode(task.Name)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(resBody)
