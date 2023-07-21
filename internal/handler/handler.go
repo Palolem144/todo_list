@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/Palolem144/todo_list/internal/domain"
-	"github.com/Palolem144/todo_list/internal/models"
+	"github.com/Palolem144/todo_list/internal/storage"
 )
 
 type Tasks []domain.Task
@@ -17,7 +17,7 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	rows, err := models.DB.Query("SELECT * FROM tasks")
+	rows, err := storage.DB.Query("SELECT * FROM tasks")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := r.URL.Query().Get("id")
-	stmt, err := models.DB.Prepare(" SELECT * FROM tasks where id = ?")
+	stmt, err := storage.DB.Prepare(" SELECT * FROM tasks where id = ?")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
@@ -79,7 +79,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	var task domain.Task
 	task.Name = name
-	stmt, err := models.DB.Prepare("INSERT INTO tasks(name) values (?)")
+	stmt, err := storage.DB.Prepare("INSERT INTO tasks(name) values (?)")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
@@ -114,7 +114,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	ID, _ := strconv.ParseInt(id, 10, 0)
 	task.Id = ID
 	task.Name = name
-	stmt, err := models.DB.Prepare("UPDATE  tasks SET name = ? WHERE id = ?")
+	stmt, err := storage.DB.Prepare("UPDATE  tasks SET name = ? WHERE id = ?")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
@@ -144,7 +144,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 	id := r.URL.Query().Get("id")
-	stmt, err := models.DB.Prepare("DELETE FROM tasks where id = ?")
+	stmt, err := storage.DB.Prepare("DELETE FROM tasks where id = ?")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}

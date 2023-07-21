@@ -6,12 +6,12 @@ import (
 	"os"
 
 	"github.com/Palolem144/todo_list/internal/handler"
-	"github.com/Palolem144/todo_list/internal/models"
+	"github.com/Palolem144/todo_list/internal/storage"
 )
 
 func main() {
 	defaultPort := ":8000"
-	models.InitDB()
+	storage.InitDB()
 	http.HandleFunc("/create", handler.Create)
 	http.HandleFunc("/getAll", handler.GetAll)
 	http.HandleFunc("/get", handler.Get)
