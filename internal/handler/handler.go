@@ -10,8 +10,6 @@ import (
 	"github.com/Palolem144/todo_list/internal/storage"
 )
 
-type Tasks []domain.Task
-
 func GetAll(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -22,7 +20,7 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	defer rows.Close()
-	var tasks Tasks
+	var tasks []domain.Task
 	for rows.Next() {
 		var task domain.Task
 		err = rows.Scan(&task.Id, &task.Name)
