@@ -31,9 +31,9 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 		}
 		tasks = append(tasks, task)
 	}
-	respBody, errMarshal := json.Marshal(tasks)
-	if errMarshal != nil {
-		log.Fatal(errMarshal)
+	respBody, err := json.Marshal(tasks)
+	if err != nil {
+		log.Fatal(err)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -51,8 +51,8 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
-	rows, errQuery := stmt.Query(id)
-	if errQuery != nil {
+	rows, err := stmt.Query(id)
+	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
 	var task domain.Task
@@ -61,8 +61,8 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 		}
-		respBody, errMarshal := json.Marshal(task)
-		if errMarshal != nil {
+		respBody, err := json.Marshal(task)
+		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -83,18 +83,18 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	result, errExec := stmt.Exec(task.Name)
-	if errExec != nil {
+	result, err := stmt.Exec(task.Name)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	newID, errLast := result.LastInsertId()
-	if errLast != nil {
+	newID, err := result.LastInsertId()
+	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
 	task.Id = newID
-	resBody, errMarshal := json.Marshal(task)
+	resBody, err := json.Marshal(task)
 
-	if errMarshal != nil {
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	err = json.NewDecoder(r.Body).Decode(task.Name)
@@ -119,17 +119,17 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
-	result, errExec := stmt.Exec(task.Name, task.Id)
-	if errExec != nil {
+	result, err := stmt.Exec(task.Name, task.Id)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
-	rowAffected, errAff := result.RowsAffected()
-	if errAff != nil {
+	rowAffected, err := result.RowsAffected()
+	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
 	if rowAffected > 0 {
-		respBody, errMarshal := json.Marshal(task)
-		if errMarshal != nil {
+		respBody, err := json.Marshal(task)
+		if err != nil {
 			w.WriteHeader(http.StatusNotModified)
 		}
 		w.Write(respBody)
@@ -149,12 +149,12 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
-	result, errExec := stmt.Exec(id)
-	if errExec != nil {
+	result, err := stmt.Exec(id)
+	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
-	rowAffected, errRow := result.RowsAffected()
-	if errRow != nil {
+	rowAffected, err := result.RowsAffected()
+	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
 	w.WriteHeader(http.StatusOK)
