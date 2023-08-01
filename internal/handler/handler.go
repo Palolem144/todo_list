@@ -43,7 +43,11 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	id := r.URL.Query().Get("id")
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	stmt, err := storage.DB.Prepare(" SELECT * FROM tasks where id = ?")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -53,6 +57,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
+	defer rows.Close()
 	var task domain.Task
 	for rows.Next() {
 		err = rows.Scan(&task.Id, &task.Name)
@@ -81,6 +86,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
+	defer stmt.Close()
 	result, err := stmt.Exec(task.Name)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -115,7 +121,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
-
+	defer stmt.Close()
 	result, err := stmt.Exec(task.Name, task.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -145,7 +151,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
-
+	defer stmt.Close()
 	result, err := stmt.Exec(id)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
