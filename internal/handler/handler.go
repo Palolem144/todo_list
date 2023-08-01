@@ -25,7 +25,7 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 		var task domain.Task
 		err = rows.Scan(&task.Id, &task.Name)
 		if err != nil {
-			log.Fatal(err)
+			w.WriteHeader(http.StatusInternalServerError)
 		}
 		tasks = append(tasks, task)
 	}
@@ -45,24 +45,24 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
 	if err != nil {
-		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 
 	stmt, err := storage.DB.Prepare(" SELECT * FROM tasks where id = ?")
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 
 	rows, err := stmt.Query(id)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	defer rows.Close()
 	var task domain.Task
 	for rows.Next() {
 		err = rows.Scan(&task.Id, &task.Name)
 		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusInternalServerError)
 		}
 		respBody, err := json.Marshal(task)
 		if err != nil {
@@ -84,16 +84,16 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	task.Name = name
 	stmt, err := storage.DB.Prepare("INSERT INTO tasks(name) values (?)")
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	defer stmt.Close()
 	result, err := stmt.Exec(task.Name)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	newID, err := result.LastInsertId()
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	task.Id = newID
 	resBody, err := json.Marshal(task)
@@ -119,16 +119,16 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	task.Name = name
 	stmt, err := storage.DB.Prepare("UPDATE  tasks SET name = ? WHERE id = ?")
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	defer stmt.Close()
 	result, err := stmt.Exec(task.Name, task.Id)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	rowAffected, err := result.RowsAffected()
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	if rowAffected > 0 {
 		respBody, err := json.Marshal(task)
@@ -149,16 +149,16 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	stmt, err := storage.DB.Prepare("DELETE FROM tasks where id = ?")
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	defer stmt.Close()
 	result, err := stmt.Exec(id)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	rowAffected, err := result.RowsAffected()
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.WriteHeader(http.StatusOK)
 	msg := strconv.Itoa(int(rowAffected))
