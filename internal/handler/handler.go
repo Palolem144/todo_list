@@ -114,7 +114,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	id := r.URL.Query().Get("id")
 	var task domain.Task
-	ID, _ := strconv.ParseInt(id, 10, 0)
+	ID, _ := strconv.ParseInt(id, 10, 64)
 	task.Id = ID
 	task.Name = name
 	stmt, err := storage.DB.Prepare("UPDATE  tasks SET name = ? WHERE id = ?")
