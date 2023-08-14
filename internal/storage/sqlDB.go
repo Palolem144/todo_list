@@ -9,13 +9,23 @@ import (
 
 var DB *sql.DB
 
-const FileName = "/Users/pllm/go/src/github.com/Palolem144/todo_list/todo.db"
-
 func InitDB() {
-	db, err := sql.Open("sqlite3", FileName)
+	db, err := sql.Open("sqlite3", "todo.db")
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Cannot connect to db", err)
 	}
+
+	sqlDB := `
+	CREATE TABLE IF NOT EXISTS tasks(
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name VARCHAR(255) NULL
+	);
+	`
+	_, err = db.Exec(sqlDB)
+	if err != nil {
+		log.Println("Cannot create table")
+	}
+
 	log.Println("Connected to the database")
 	DB = db
 }
