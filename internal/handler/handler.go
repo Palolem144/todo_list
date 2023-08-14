@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -17,7 +16,7 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 	rows, err := storage.DB.Query("SELECT id, name FROM tasks")
 	if err != nil {
-		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	defer rows.Close()
 	var tasks []domain.Task
@@ -31,7 +30,7 @@ func GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 	respBody, err := json.Marshal(tasks)
 	if err != nil {
-		log.Fatal(err)
+		w.WriteHeader(http.StatusBadRequest)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -43,35 +42,25 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	ID := r.URL.Query().Get("id")
+	id, err := strconv.ParseInt(ID, 10, 64)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 	}
-
-	stmt, err := storage.DB.Prepare(" SELECT * FROM tasks where id = ?")
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	rows, err := stmt.Query(id)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	defer rows.Close()
+	stmt := storage.DB.QueryRow("SELECT * FROM tasks where id = ?", id)
 	var task domain.Task
-	for rows.Next() {
-		err = rows.Scan(&task.Id, &task.Name)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		respBody, err := json.Marshal(task)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write(respBody)
+
+	err = stmt.Scan(&task.Id, &task.Name)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 	}
+	respBody, err := json.Marshal(task)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(respBody)
 }
 
 func Create(w http.ResponseWriter, r *http.Request) {
@@ -82,16 +71,12 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	var task domain.Task
 	task.Name = name
-	stmt, err := storage.DB.Prepare("INSERT INTO tasks(name) values (?)")
+
+	stmt, err := storage.DB.Exec("INSERT INTO tasks(name) values (?)", task.Name)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	defer stmt.Close()
-	result, err := stmt.Exec(task.Name)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	newID, err := result.LastInsertId()
+	newID, err := stmt.LastInsertId()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -99,7 +84,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	resBody, err := json.Marshal(task)
 
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -112,21 +97,20 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	name := r.FormValue("name")
-	id := r.URL.Query().Get("id")
+	ID := r.URL.Query().Get("id")
+	id, err := strconv.ParseInt(ID, 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
 	var task domain.Task
-	ID, _ := strconv.ParseInt(id, 10, 64)
-	task.Id = ID
+	task.Id = id
 	task.Name = name
-	stmt, err := storage.DB.Prepare("UPDATE  tasks SET name = ? WHERE id = ?")
+
+	stmt, err := storage.DB.Exec("UPDATE tasks SET name = ? WHERE id = ?", task.Name, task.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	defer stmt.Close()
-	result, err := stmt.Exec(task.Name, task.Id)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	rowAffected, err := result.RowsAffected()
+	rowAffected, err := stmt.RowsAffected()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -140,23 +124,28 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		msg := strconv.Itoa(int(rowAffected))
 		w.Write([]byte(msg))
 	}
+	respBody, err := json.Marshal(task)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	w.Write(respBody)
+
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
-	id := r.URL.Query().Get("id")
-	stmt, err := storage.DB.Prepare("DELETE FROM tasks where id = ?")
+	ID := r.URL.Query().Get("id")
+	id, err := strconv.ParseInt(ID, 10, 64)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	stmt, err := storage.DB.Exec("DELETE FROM tasks where id = ?", id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	defer stmt.Close()
-	result, err := stmt.Exec(id)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	rowAffected, err := result.RowsAffected()
+	rowAffected, err := stmt.RowsAffected()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
