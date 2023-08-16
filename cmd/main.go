@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	defaultPort := ":8000"
+	defaultAddr := ":8000"
 	storage.InitDB()
 	http.HandleFunc("/create", handler.Create)
 	http.HandleFunc("/getAll", handler.GetAll)
@@ -20,7 +20,7 @@ func main() {
 
 	addr := os.Getenv("PORT")
 	if addr == "" {
-		addr = defaultPort
+		addr = defaultAddr
 	}
 
 	log.Println("Starting server...")
