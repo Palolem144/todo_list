@@ -18,13 +18,13 @@ func main() {
 	http.HandleFunc("/update", handler.Update)
 	http.HandleFunc("/delete", handler.Delete)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
+	addr := os.Getenv("PORT")
+	if addr == "" {
+		addr = defaultPort
 	}
 
 	log.Println("Starting server...")
-	err := http.ListenAndServe(port, nil)
+	err := http.ListenAndServe(addr, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
