@@ -44,7 +44,7 @@ func (r *Repository) Get(db *sql.DB, id int64) (*domain.Task, error) {
 func (r *Repository) GetAll(db *sql.DB, id int64, name string) ([]domain.Task, error) {
 	rows, err := storage.DB.Query("SELECT id, name FROM tasks")
 	if err != nil {
-		return []domain.Task{}, err
+		return nil, err
 	}
 	var tasks []domain.Task
 	defer rows.Close()
@@ -53,7 +53,7 @@ func (r *Repository) GetAll(db *sql.DB, id int64, name string) ([]domain.Task, e
 		var task domain.Task
 		err = rows.Scan(&task.Id, &task.Name)
 		if err != nil {
-			return []domain.Task{}, err
+			return nil, err
 		}
 		tasks = append(tasks, task)
 	}
