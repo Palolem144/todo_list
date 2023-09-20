@@ -12,7 +12,7 @@ var DB *sql.DB
 func InitDB(dbPath string) {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
-		log.Println("Cannot connect to db", err)
+		log.Fatalln("Cannot connect to db", err)
 	}
 
 	sqlDB := `
